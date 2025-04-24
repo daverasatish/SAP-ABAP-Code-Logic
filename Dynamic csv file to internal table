@@ -1,0 +1,48 @@
+***********************************************************************
+***********************************************************************
+TYPES: BEGIN OF tt_header,
+         head TYPE c LENGTH 30,
+       END OF tt_header.
+
+TYPES: BEGIN OF tt_body,
+         col1  TYPE  char120,
+         col2  TYPE  char120,
+         col3  TYPE  char120,
+         col4  TYPE  char120,
+         col5  TYPE  char120,
+         col6  TYPE  char120,
+         col7  TYPE  char120,
+         col8  TYPE  char120,
+         col9  TYPE  char120,
+         col10 TYPE  char120,
+       END OF tt_body.
+
+DATA: gt_body   TYPE STANDARD TABLE OF tt_body,
+      gt_header TYPE TABLE OF tt_header.
+
+******************** using FM to get dynamic table data from CSV.
+CALL FUNCTION 'GUI_UPLOAD'
+  EXPORTING
+    filename            = 'c:/mysapce/file.xls'
+    has_field_separator = 'X'
+  TABLES
+    data_tab            = gt_body.
+
+****************** INDEX 1 is header.
+*******************dynamic header creation
+DATA(i) = 1.
+READ TABLE gt_body INTO DATA(ls_body) INDEX 1.
+CHECK sy-subrc = 0.
+WHILE 1 = 1.                                                                " Infinity loop
+  ASSIGN COMPONENT i OF STRUCTURE ls_body TO FIELD-SYMBOL(<fs_value>).      " fetching each value
+  IF <fs_value> IS ASSIGNED AND <fs_value> IS NOT INITIAL.
+    gt_header  = VALUE #( BASE gt_header ( h = <fs_value> ) ).              " storing in header table
+    UNASSIGN <fs_value>.
+  ELSE.
+    EXIT.
+  ENDIF.
+  i = i + 1.
+ENDWHILE.
+
+DELETE gt_body INDEX 1.                    "  its header so removing this record.
+
