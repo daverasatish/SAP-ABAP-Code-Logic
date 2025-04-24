@@ -1,0 +1,27 @@
+***************************************************************
+**************************************************************
+  DATA : lt_tabtype     TYPE REF TO cl_abap_tabledescr,
+         lv_struct_type TYPE REF TO cl_abap_structdescr,
+         lr_data_1      TYPE REF TO data,
+         lr_data_2      TYPE REF TO data,
+*        lv_tabname     TYPE dfies-tabname,
+         lt_comp_tab    TYPE cl_abap_structdescr=>component_table.
+
+  FIELD-SYMBOLS: <fs_tab> TYPE ANY TABLE,
+                 <fs_str> TYPE any.
+
+********Get the input table structure
+  lv_struct_type ?= cl_abap_typedescr=>describe_by_name( lv_tbnm ).
+  lt_comp_tab  = lv_struct_type->get_components( ).
+  lv_struct_type = cl_abap_structdescr=>create( lt_comp_tab ).
+
+*******assign dynamic structure to field-symbol
+  CREATE DATA lr_data_2 TYPE HANDLE lv_struct_type.
+  
+
+  lt_tabtype = cl_abap_tabledescr=>create( lv_struct_type ).
+
+******assign dynamic table to field-symbol
+  CREATE DATA lr_data_1 TYPE HANDLE lt_tabtype.
+  ASSIGN lr_data_1->* TO <fs_tab>.
+
