@@ -46,7 +46,7 @@ CHECK sy-subrc = 0.
 WHILE 1 = 1.                                                                " Infinity loop
   ASSIGN COMPONENT i OF STRUCTURE ls_body TO FIELD-SYMBOL(<fs_value>).      " fetching each value
   IF <fs_value> IS ASSIGNED AND <fs_value> IS NOT INITIAL.
-    gt_header  = VALUE #( BASE gt_header ( h = <fs_value> ) ).              " storing in header table
+    gt_header  = VALUE #( BASE gt_header ( head = <fs_value> ) ).              " storing in header table
     UNASSIGN <fs_value>.
   ELSE.
     EXIT.
