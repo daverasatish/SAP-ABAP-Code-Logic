@@ -1,0 +1,14 @@
+*********************************************************************
+******************** using FM to Download table data into CSV.
+
+  CALL FUNCTION 'GUI_DOWNLOAD'
+    EXPORTING
+      filename              = 'c:myfiles/file.xlc'
+      write_field_separator = abap_true
+    TABLES
+      data_tab              = gt_body
+      fieldnames            = gt_header.
+
+  IF sy-subrc EQ 0.
+    MESSAGE 'Excel downloaded' TYPE 'S'.
+  ENDIF.
