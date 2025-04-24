@@ -1,9 +1,29 @@
 *********************************************************************
+*********************************************************************
+  DATA: lv_rc         TYPE i,
+        lt_file_table TYPE filetable,
+        ls_file_table TYPE file_table,
+        lv_file_path  TYPE string.
+
+************************ using class to select & create a csv file path
+  CALL METHOD cl_gui_frontend_services=>file_open_dialog
+    EXPORTING
+      window_title      = 'Select file'
+      default_extension = 'XLS'
+      default_filename  = 'Template'
+    CHANGING
+      file_table        = lt_file_table
+      rc                = lv_rc.
+  IF sy-subrc = 0.
+    READ TABLE lt_file_table INTO ls_file_table INDEX 1.
+    lv_file_path = ls_file_table-filename.
+  ENDIF.
+
 ******************** using FM to Download table data into CSV.
 
   CALL FUNCTION 'GUI_DOWNLOAD'
     EXPORTING
-      filename              = 'c:myfiles/file.xlc'
+      filename              = lv_file_path                 " 'c:myfiles/file.xlc'
       write_field_separator = abap_true
     TABLES
       data_tab              = gt_body
