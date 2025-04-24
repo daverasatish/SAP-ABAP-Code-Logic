@@ -17,13 +17,23 @@ TYPES: BEGIN OF tt_body,
          col10 TYPE  char120,
        END OF tt_body.
 
-DATA: gt_body   TYPE STANDARD TABLE OF tt_body,
-      gt_header TYPE TABLE OF tt_header.
+DATA: gt_body      TYPE STANDARD TABLE OF tt_body,
+      gt_header    TYPE TABLE OF tt_header,
+      lv_file_path TYPE ibipparms-path.
+
+******************** using FM to get CSV file path.
+  CALL FUNCTION 'F4_FILENAME'
+    EXPORTING
+      program_name  = syst-cprog
+      dynpro_number = syst-dynnr
+      field_name    = ''
+    IMPORTING
+      file_name     = lv_file_path.
 
 ******************** using FM to get dynamic table data from CSV.
 CALL FUNCTION 'GUI_UPLOAD'
   EXPORTING
-    filename            = 'c:/mysapce/file.xls'
+    filename            = lv_file_path                " 'c:/mysapce/file.xls'
     has_field_separator = 'X'
   TABLES
     data_tab            = gt_body.
