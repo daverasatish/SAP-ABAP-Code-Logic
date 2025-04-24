@@ -1,0 +1,26 @@
+**************************************************************
+**************************************************************
+
+****************** read all data into table.
+  SELECT * FROM z_table INTO CORRESPONDING FIELDS OF TABLE @lt_table.
+
+****************** read single record form table.
+  READ TABLE z_table INTO DATA(ls_table) WITH KEY key = 'value'.    
+     ************ or ************
+  SELECT SINGLE * FROM z_table INTO CORRESPONDING FIELDS OF @ls_table WHERE key = 'value'.
+
+******************* create new record into table.
+  INSERT z_table FROM ls_table.
+
+******************* update record in table.
+  UPDATE z_table FROM ls_table.
+
+******************* Delete record in table.
+  DELETE FROM z_table WHERE key = 'value'.
+
+******************* read all data into table dynamically.
+DATA lv_table TYPE dfies-tabname.
+SELECT * FROM (lv_table) INTO CORRESPONDING FIELDS OF TABLE @lt_table.
+
+******************* read data from internal table.
+SELECT * FROM @lt_input_table AS z_table INTO TABLE @lt_output_table.
