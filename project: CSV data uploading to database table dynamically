@@ -1,0 +1,134 @@
+**********************************************
+**************************** Data Declaration
+
+TYPES: BEGIN OF tt_body,
+         col1  TYPE  char120,
+         col2  TYPE  char120,
+         col3  TYPE  char120,
+         col4  TYPE  char120,
+         col5  TYPE  char120,
+         col6  TYPE  char120,
+         col7  TYPE  char120,
+         col8  TYPE  char120,
+         col9  TYPE  char120,
+         col10 TYPE  char120,
+       END OF tt_body.
+
+DATA: gt_body        TYPE STANDARD TABLE OF tt_body,
+      lt_tabtype     TYPE REF TO cl_abap_tabledescr,
+      lv_struct_type TYPE REF TO cl_abap_structdescr,
+      lr_data        TYPE REF TO data,
+      lt_comp_tab    TYPE cl_abap_structdescr=>component_table,
+      lv_str         TYPE string.
+
+FIELD-SYMBOLS: <fs_str> TYPE any.
+
+
+********************************************************************
+**************************************************** Input Screen
+
+PARAMETERS: p_file_i TYPE ibipparms-path,
+            p_tabnm  TYPE dfies-tabname.
+SELECTION-SCREEN PUSHBUTTON  /27(4) p_btn USER-COMMAND btn.    " to download templete if required
+
+****************************************************************
+******************** PBO
+AT SELECTION-SCREEN.
+  CASE sy-ucomm.
+    WHEN 'BTN'.
+
+      DATA: lv_rc         TYPE i,
+            lt_file_table TYPE filetable,
+            ls_file_table TYPE file_table,
+            lv_filename   TYPE string.
+
+      CALL METHOD cl_gui_frontend_services=>file_open_dialog
+        EXPORTING
+          window_title      = 'Select Output file'
+          default_extension = 'XLS'
+          default_filename  = 'Template'
+        CHANGING
+          file_table        = lt_file_table
+          rc                = lv_rc.
+      IF sy-subrc = 0.
+        READ TABLE lt_file_table INTO ls_file_table INDEX 1.
+        lv_filename = ls_file_table-filename.
+        CALL FUNCTION 'GUI_DOWNLOAD'
+          EXPORTING
+            filename              = lv_filename
+            write_field_separator = abap_true
+          TABLES
+            data_tab              = gt_body
+            fieldnames            = gt_body.
+        IF sy-subrc EQ 0.
+          MESSAGE 'Template downloaded' TYPE 'S'.
+        ENDIF.
+      ENDIF.
+
+  ENDCASE.
+
+**************************************************
+******************** PAI
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_file_i.
+  DATA: lv_rc         TYPE i,
+        lt_file_table TYPE filetable,
+        ls_file_table TYPE file_table.
+
+  CALL FUNCTION 'F4_FILENAME'
+    EXPORTING
+      program_name  = syst-cprog
+      dynpro_number = syst-dynnr
+      field_name    = ''
+    IMPORTING
+      file_name     = p_file_i.
+
+****************************************************
+****************
+INITIALIZATION .
+  p_btn = icon_cloud_download.
+
+
+*****************************************************
+*****************
+START-OF-SELECTION.
+
+**  "Get the input table dynamic structure
+  lv_struct_type ?= cl_abap_typedescr=>describe_by_name( p_tabnm ).
+  lt_comp_tab  = lv_struct_type->get_components( ).
+  lv_struct_type = cl_abap_structdescr=>create( lt_comp_tab ).
+  CREATE DATA lr_data TYPE HANDLE lv_struct_type.
+  ASSIGN lr_data->* TO <fs_str>.
+
+******************** using FM to get dynamic table data from CSV.
+  lv_str = p_file_i.                            " filename must be in string and file must be
+
+  CALL FUNCTION 'GUI_UPLOAD'
+    EXPORTING
+      filename            = lv_str              " 'c:/mysapce/file.xls
+      has_field_separator = 'X'
+    TABLES
+      data_tab            = gt_body.
+
+  DELETE gt_body INDEX 1.                    "  its header so removing this record.
+
+********************************************************
+************************** inserting data into backend table.
+
+  LOOP AT gt_body INTO data(ls_body).
+    CLEAR <fs_str>.
+    data(i) = 1.
+    WHILE 1 = 1.                                                                    " Infinity loop
+      ASSIGN COMPONENT i OF STRUCTURE ls_body TO FIELD-SYMBOL(<fs_csv_value>).      " fetching each value
+      ASSIGN COMPONENT i OF STRUCTURE <fs_str> TO FIELD-SYMBOL(<fs_str_value>).
+      IF <fs_str_value> IS ASSIGNED AND <fs_csv_value> IS ASSIGNED.
+        <fs_str_value> = <fs_csv_value>.
+        UNASSIGN: <fs_str_value>, <fs_csv_value>.
+      ELSE.
+        EXIT.
+      ENDIF.
+      i = i + 1.
+    ENDWHILE.
+
+    INSERT (p_tabnm) FROM <fs_str>.                                                 " inserting record into table dynamically.
+  ENDLOOP.
+
