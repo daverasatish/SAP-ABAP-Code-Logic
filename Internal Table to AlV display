@@ -1,0 +1,14 @@
+DATA: lo_alv TYPE REF TO cl_salv_table.
+
+select * from <table> into table @data(lt_data).
+   TRY.
+        cl_salv_table=>factory(
+          IMPORTING
+            r_salv_table = lo_alv
+          CHANGING
+            t_table      = lt_data
+        ).
+      CATCH cx_salv_msg.
+        " Handle potential errors here
+    ENDTRY.
+lo_alv->display( ).
